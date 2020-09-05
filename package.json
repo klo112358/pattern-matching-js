@@ -1,0 +1,55 @@
+{
+  "name": "pattern-matching-js",
+  "version": "0.1.6",
+  "description": "A pattern matching library written in Typescript.",
+  "main": "dist/index.js",
+  "sideEffects": false,
+  "files": [
+    "dist/**",
+    "umd/**"
+  ],
+  "scripts": {
+    "build": "rollup --config rollup.config.js",
+    "test": "mocha -r ts-node/register test/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/klo112358/pattern-matching-js.git"
+  },
+  "author": "klo112358",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/klo112358/pattern-matching-js/issues"
+  },
+  "homepage": "https://github.com/klo112358/pattern-matching-js#readme",
+  "devDependencies": {
+    "@babel/core": "^7.11.4",
+    "@babel/preset-env": "^7.11.0",
+    "@rollup/plugin-babel": "^5.2.0",
+    "@rollup/plugin-typescript": "^5.0.2",
+    "@types/chai": "^4.2.12",
+    "@types/chai-things": "0.0.34",
+    "@types/mocha": "^8.0.3",
+    "@typescript-eslint/eslint-plugin": "^3.10.1",
+    "@typescript-eslint/parser": "^3.10.1",
+    "chai": "^4.2.0",
+    "chai-things": "^0.2.0",
+    "eslint": "^7.7.0",
+    "mocha": "^8.1.2",
+    "rollup": "^2.26.6",
+    "rollup-plugin-terser": "^7.0.0",
+    "ts-node": "^9.0.0",
+    "typescript": "^4.0.2"
+  },
+  "browserslist": "> 0.25%, not dead",
+  "keywords": [
+    "pattern",
+    "matching",
+    "matcher",
+    "match",
+    "expression",
+    "shape",
+    "functional",
+    "typescript"
+  ]
+}
