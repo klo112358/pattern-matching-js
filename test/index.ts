@@ -1,4 +1,4 @@
-import { when, A, B, any, _, head, tail } from "../dist"
+import { when, A, B, C, any, _, head, tail } from "../dist"
 import chai, { expect } from "chai"
 import chaiThings from "chai-things"
 
@@ -98,7 +98,7 @@ describe("Test object", () => {
     expect(res).to.be.deep.equal({ A: "s" })
   })
   it("should not match #1", () => {
-    const res = when({ a: [1, 2], b: { c: "s" } })({ a: Object, b: B(Object) })()
+    const res = when({ a: [1, 2], b: { c: "s" } })({ a: A(Object), b: B(Object) })()
     expect(res).to.be.undefined
   })
   it("should not match #2", () => {
@@ -116,6 +116,17 @@ describe("Test constructor", () => {
   it("should not match #1", () => {
     const date = new Date()
     const res = when(date)(A(Buffer))()
+    expect(res).to.be.undefined
+  })
+})
+
+describe("Test nested symbol", () => {
+  it("should match #1", () => {
+    const res = when([1, 2, 3])(A([B(head), C]))()
+    expect(res).to.be.deep.equal({ A: [1, 2, 3], B: [1, 2], C: 3 })
+  })
+  it("should not match #1", () => {
+    const res = when([1, 2, 3])(A([B(head), 4]))()
     expect(res).to.be.undefined
   })
 })

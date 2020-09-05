@@ -1,6 +1,6 @@
 {
   "name": "pattern-matching-js",
-  "version": "0.1.6",
+  "version": "0.2.0",
   "description": "A pattern matching library written in Typescript.",
   "main": "dist/index.js",
   "sideEffects": false,

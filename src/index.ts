@@ -1,6 +1,6 @@
 type Union<A, B> = any extends A ? B : A | B
 
-export interface Sym<T, S extends string, P extends boolean | null> {
+export interface Sym<T, S extends string, P extends boolean | null, K = undefined> {
   (a: typeof any): Sym<T, S, null>
   (a: typeof head): P extends null ? Sym<T, S, null> : Sym<T, S, true>
   (a: typeof tail): P extends null ? Sym<T, S, null> : Sym<T, S, true>
@@ -13,12 +13,15 @@ export interface Sym<T, S extends string, P extends boolean | null> {
   (a: SymbolConstructor): Sym<Union<T, symbol>, S, P>
   (a: ArrayConstructor): Sym<Union<T, any[]>, S, P>
   (a: ObjectConstructor): Sym<Union<T, Record<keyof any, unknown>>, S, P>
-  <C>(a: C): C extends new (...args: any) => infer R ? Sym<Union<T, R>, S, P> : never
+  // eslint-disable-next-line max-len
+  <C extends new (...args: any[]) => any>(a: C): C extends new (...args: any) => infer R ? Sym<Union<T, R>, S, P> : never
+  <K>(a: K): Sym<T, S, P, K>
   filter(fn: (value: T) => boolean): Sym<T, S, P>
   readonly symbol: S
   readonly match: any extends T ? false : ((value: any) => value is T)
   readonly filters: (value: any) => boolean
   readonly any: boolean
+  readonly pattern?: K
   readonly spread?: () => void
 }
 
@@ -26,7 +29,7 @@ type UnionToIntersection<U> =
   (U extends any ? (k: U) => void : never) extends ((k: infer I) => void) ? I : never
 
 type SymToRecord<T> =
-  T extends Sym<infer A, infer S, infer R>
+  T extends Sym<infer A, infer S, infer R, any>
     ? false extends R
       ? { [K in S]: A }
       : true extends R
@@ -40,11 +43,14 @@ type Flatten<T> = {
   // eslint-disable-next-line @typescript-eslint/ban-types
   0: {}
   1: SymToRecord<T>
-  2: T extends { [K in keyof T]: infer R } ? Flatten<R> : never
-}[T extends Sym<any, string, boolean>
-  ? 1
+  2: T extends Sym<any, string, boolean, infer K> ? SymToRecord<T> | Flatten<K> : never
+  3: T extends { [K in keyof T]: infer R } ? Flatten<R> : never
+}[T extends Sym<any, string, boolean, infer K>
+  ? K extends undefined
+    ? 1
+    : 2
   : T extends Record<keyof any, any> | any[]
-    ? 2
+    ? 3
     : 0
 ]
 
@@ -123,6 +129,7 @@ function cloneSym(obj: any): any {
   newObj.spread = obj.spread
   newObj.any = obj.any
   newObj.filters = obj.filters
+  newObj.pattern = obj.pattern
   return newObj
 }
 
@@ -142,11 +149,15 @@ export function sym<S extends string>(symbol: S): Sym<any, S, false> {
       newObj.any = true
       return newObj
     }
+    if (isSym(a)) {
+      newObj.pattern = a
+      return newObj
+    }
     const matcher = typeMatcher(a)
     if (matcher) {
       newObj.match = (value: any) => (match && match(value)) || matcher(value)
     } else {
-      throw new Error(`${a} is not a function`)
+      newObj.pattern = a
     }
     return newObj
   }
@@ -164,7 +175,7 @@ export function sym<S extends string>(symbol: S): Sym<any, S, false> {
 }
 
 function isSym(value: any): value is Sym<any, string, boolean> {
-  return typeof value === "function" && typeof value.symbol === "string"
+  return typeof value === "function" && typeof value.symbol === "string" && typeof value.filters === "function"
 }
 
 function check(value: unknown, pattern: any, prevMatch: Record<string, any>): Record<string, any> | null {
@@ -180,6 +191,11 @@ function check(value: unknown, pattern: any, prevMatch: Record<string, any>): Re
     const output: any = {}
     if (!pattern.any) {
       output[sym] = value
+    }
+    if (pattern.pattern) {
+      const res = check(value, pattern.pattern, output)
+      if (res === null) return null
+      Object.assign(output, res)
     }
     return output
   }

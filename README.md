@@ -33,6 +33,7 @@ when(3)
     .case(1, () => console.log("no match"))
     .case(2, () => console.log("no match"))
     .case(A, ({ A }) => console.log(`match: ${A} = 3`))
+    .case(3, () => console.log("ignored"))
 ```
 
 Alternatively, you may omit `.case`.
@@ -42,6 +43,7 @@ when(3)
     (1, () => console.log("no match"))
     (2, () => console.log("no match"))
     (A, ({ A }) => console.log(`match: ${A} = 3`))
+    (3, () => console.log("ignored"))
 ```
 
 The result of the callback function can be obtained by calling `.end()`.
@@ -109,7 +111,7 @@ To use placeholders, import them first.
 ```js
 const { match, A, B } = require("pattern-matching-js")
 ```
-You may import from "A" to "Z" and from "a" to "z", as well as "_".
+You may import placeholders from `A` to `Z` and from `a` to `z`.
 
 ```js
 match(3, A) // { A: 3 }
@@ -156,6 +158,17 @@ match(3, A(Number).filter(x => x > 5))                    // undefined
 match(3, A(Number).filter(x => x < 5).filter(x => x > 1)) // { A: 3 }
 ```
 
+You may pass patterns to a placeholder.
+```js
+match([1, 2], A([B, C])) // { A: [1, 2], B: 1, C: 2 }
+```
+
+You may also pass regular expression to a placeholder.
+```js
+match("foo", A(/^w+$/))     // { A: "foo" }
+match("foo bar", A(/^w+$/)) // undefined
+```
+
 You may use the same placeholder multiple times,
 however, it must match against the same value.
 ```js
@@ -195,24 +208,19 @@ match(3, _(Number))            // {}
 match(3, _.filter(x => x > 5)) // undefined
 ```
 
-One may concern the use of `_` will conflict with other libraries.
-In that case, you may use the `any` flag.
+If you just want to check for a single type only,
+you may pass the constructor of the type without placeholders.
 ```js
-const { any } = require("pattern-matching-js")
-
-match([1, 2], [any, any]) // {}
+match(3, String)                // undefined
+match([1, 2], [Number, Number]) // {}
 ```
 
-Note that `any` is a flag, not a placeholder.
-To create a custom placeholder with the same property as `_`,
-pass the `any` flag to the placeholder.
-
+You can pass regular expression without placeholders as well.
 ```js
-const MySymbol = sym("")(any)
-
-match(3, MySymbol(String)) // undefined
-match(3, MySymbol(Number)) // {}
+match("foo", /^w+$/)     // {}
+match("foo bar", /^w+$/) // undefined
 ```
+
 
 ### Objects
 
@@ -267,14 +275,6 @@ match([A(head)(Number), 3], [1, "2", 3])         // undefined
 match([A(head)(Number)(String), 3], [1, "2", 3]) // { A: [1, "2"] }
 ```
 
-### Regular expression
-You may pass regular expression as pattern or to a placeholder.
-```js
-match(/^\w+$/, "foo")     // {}
-match(/^\w+$/, "foo bar") // undefined
-match(A(/^\w+$/), "foo")  // { A: "foo" }
-```
-
 ## Typescript
 pattern-matching-js includes [TypeScript](http://typescriptlang.org) definitions.
 
@@ -292,6 +292,3 @@ when([1, 2, 3])
         /* typeof res = { A: number | null } */
     })
 ```
-
-## To-do
-* Allow placeholder to accept a pattern.
